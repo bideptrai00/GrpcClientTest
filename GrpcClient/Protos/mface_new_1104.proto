@@ -1,0 +1,422 @@
+syntax = "proto3";
+
+package mface;
+
+service MFace {
+  rpc StreamRecognize (stream SRecognizeRequest) returns (stream SRecognizeResponse) {
+    // recognize with client-server streaming
+  }
+
+  rpc StreamRecognize112 (stream SRecognizeRequest) returns (stream SRecognizeResponse) {
+    // recognize with client-server streaming (aligned 112x112 images)
+  }
+
+  rpc Recognize112 (SRecognizeRequest) returns (ListSRecognizeResponse) {
+    // recognize (aligned 112x112 images)
+  }
+
+  rpc Recognize (RecognizeRequest) returns (RecognizeResponse) {
+    // Multi-case handle. 
+  }
+
+  rpc RecognizeURL (RecognizeURLRequest) returns (RecognizeResponse) {
+    // recognize image from url
+  }
+
+  rpc FacePose (FacePoseRequest) returns (FacePoseResponse) {
+    // detect face pose
+  }
+
+  rpc FaceAntispoof (FaceAntispoofRequest) returns (FaceAntispoofResponse) {
+    // detect face antispoof
+  }
+
+  rpc Verify (VerifyRequest) returns (VerifyResponse) {
+    // verify image belonging to person
+  }
+
+  rpc Verify112 (VerifyRequest) returns (VerifyResponse) {
+    // verify aligned 112x112 image that belongs to person
+  }
+
+  rpc SocketRegistration (SocketRegistrationRequest) returns (SocketPrefix) {
+    // register key for socket udp recognition
+  }
+
+  rpc ListCompanies (ListCompaniesRequest) returns (ListCompaniesResponse) {
+    // list all companies whose id starts with prefix
+  }
+
+  rpc AddCompany (AddCompanyRequest) returns (AddCompanyResponse) {
+    // add new company
+  }
+
+  rpc UpdateCompanyInfo (UpdateCompanyInfoRequest) returns (UpdateCompanyInfoResponse) {
+    // update existing company's info (exclude id)
+  }
+
+  rpc GetCompany (GetCompanyRequest) returns (GetCompanyResponse) {
+    // get existing company's info and its people's info
+  }
+
+  rpc DeleteCompany (DeleteCompanyRequest) returns (DeleteCompanyResponse) {
+    // remove company and all its people
+  }
+
+  rpc CloneCompany (CloneCompanyRequest) returns (CloneCompanyResponse) {
+    // clone company (include info, people, model) to another
+  }
+
+  rpc TrainCompanyModel (TrainCompanyRequest) returns (TrainCompanyResponse) {
+    // train company's recognition model
+  }
+
+  rpc AddPerson (AddPersonRequest) returns (AddPersonResponse) {
+    // add new person to company (create new company if not exist)
+  }
+
+  rpc AddPerson112 (AddPersonRequest) returns (AddPersonResponse){
+    // add new person to company (create new company if not exist), faces are aligned 112x112 images
+  }
+
+  rpc UpdatePersonInfo (UpdatePersonInfoRequest) returns (UpdatePersonInfoResponse) {
+    // update existing person's info
+  }
+
+  rpc UpdatePersonEmbeddings (UpdatePersonEmbeddingsRequest) returns (UpdatePersonEmbeddingsResponse) {
+    // update person's embeddings with images
+  }
+
+  rpc UpdatePersonEmbeddings112 (UpdatePersonEmbeddingsRequest) returns (UpdatePersonEmbeddingsResponse) {
+    // update person's embeddings with aligned 112x112 images
+  }
+
+  rpc GetPerson (GetPersonRequest) returns (GetPersonResponse) {
+    // get existing person's info
+  }
+
+  rpc DeletePerson (DeletePersonRequest) returns (DeletePersonResponse) {
+    // remove person from its company
+  }
+
+  rpc GetRecognitionHistory (GetRecognitionHistoryRequest) returns (GetRecognitionHistoryResponse) {
+    // get successful recognitions
+  }
+}
+
+
+
+message DebugInfo {
+  string requestId = 1;
+  float time = 2;
+  string version = 3;
+}
+
+message Point2D{
+  int32 x = 1;
+  int32 y = 2;
+}
+
+message Keypoints {
+  Point2D L_EYE = 1;
+  Point2D R_EYE = 2;
+  Point2D NOSE = 3;
+  Point2D L_MOUTH = 4;
+  Point2D R_MOUTH = 5;
+}
+
+message Box {
+  int32 x1 = 1;
+  int32 y1 = 2;
+  int32 x2 = 3;
+  int32 y2 = 4;
+}
+
+message Person {
+  string id = 1;
+  string name = 2;
+  string position = 3;
+  bool isFresher = 4;
+  bool goodPose = 5;
+  float conf = 6;
+  Box boundingBox = 7;
+  Keypoints keypoints = 8;
+}
+
+message ImageObject {
+  bytes image = 1;
+  string type = 2;
+  string imageUrl = 3;
+}
+
+message Company {
+  string id = 1;
+  string name = 2;
+}
+
+message FacePoseRequest {
+  bytes image = 1;
+  string requestId = 2;
+}
+
+message FacePoseResponse {
+  int32 errorCode = 1;
+  string errorMessage = 2;
+  float yaw = 3;
+  float pitch = 4;
+  float roll = 5;
+  DebugInfo debugInfo = 6;
+}
+
+message FaceAntispoofRequest {
+  bytes image = 1;
+  string requestId = 2;
+}
+
+message FaceAntispoofResponse {
+  int32 errorCode = 1;
+  string errorMessage = 2;
+  int32 isSpoof = 3;
+  DebugInfo debugInfo = 4;
+}
+
+message SRecognizeRequest {
+  string companyId = 1;
+  string clientId = 2;
+  int32 imageId = 3;
+  bytes image = 4;
+  bytes image_ats = 5;
+  string requestId = 6;
+}
+
+message SRecognizeResponse {
+  string recognizedTime = 1;
+  int32 imageId = 2;
+  Person person = 3;
+  bool isFake = 4;
+  float conf = 5;
+}
+
+message RecognizeRequest {
+  string requestId = 1;
+  string companyId = 2;
+  string clientId = 3;
+  bytes media = 4;
+}
+
+message RecognizeURLRequest {
+  string requestId = 1;
+  string companyId = 2;
+  string clientId = 3;
+  string mediaUrl = 4;
+}
+
+message RecognizeResponse {
+  int32 errorCode = 1;
+  string errorMessage = 2;
+  string companyId = 3;
+  repeated Person person = 4;
+  DebugInfo debugInfo = 5;
+}
+
+message ListSRecognizeResponse {
+  repeated SRecognizeResponse responses = 1;
+}
+
+message VerifyRequest {
+  string companyId = 1;
+  string clientId = 2; // android/ios/... (not random uuid)
+  string personId = 3;
+  bytes image = 4;
+  bytes image_ats = 5;
+  int64 timestamp = 6; // in milliseconds
+  string requestId = 7;
+}
+
+message VerifyResponse {
+  enum Status {
+    NOT_MATCHED = 0; // not matched or unable to detect faces
+    MATCHED = 1;
+    NOT_FOUND = 2; // personId is not found in db
+  }
+
+  Status status = 1;
+  bool isFake = 2;
+}
+
+message SocketRegistrationRequest {
+  string companyId = 1;
+  string clientId = 2;
+}
+
+message SocketPrefix {
+  bytes prefix = 1;
+}
+
+message ListCompaniesRequest {
+  string prefix = 1;
+}
+
+message ListCompaniesResponse {
+  repeated Company companies = 1;
+}
+
+message AddCompanyRequest {
+  string companyId = 1;
+  string companyName = 2;
+}
+
+message AddCompanyResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message UpdateCompanyInfoRequest {
+  string companyId = 1;
+  Company company = 2;
+}
+
+message UpdateCompanyInfoResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message GetCompanyRequest {
+  string companyId = 1;
+}
+
+message GetCompanyResponse {
+  Company company = 1;
+  repeated Person people = 2;
+}
+
+message DeleteCompanyRequest {
+  string companyId = 1;
+  string masterKey = 2;
+}
+
+message DeleteCompanyResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message CloneCompanyRequest {
+  string companyId = 1;
+  string cloneCompanyId = 2;
+}
+
+message CloneCompanyResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message TrainCompanyRequest {
+  string companyId = 1;
+}
+
+message TrainCompanyResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+// message AddPersonRequest {
+//   string companyId = 1;
+//   Person person = 2;
+//   repeated bytes images = 3;
+// }
+
+// message AddPersonResponse {
+//   int32 code = 1;
+//   string message = 2;
+// }
+
+message AddPersonRequest {
+  string companyId = 1;
+  Person person = 2;
+  repeated ImageObject images = 3;
+  string requestId = 4;
+}
+
+message AddPersonResponse {
+  int32 errorCode = 1;
+  string errorMessage = 2;
+  DebugInfo debugInfo = 3;
+}
+
+message UpdatePersonInfoRequest {
+  string companyId = 1;
+  string personId = 2;
+  Person person = 3;
+}
+
+message UpdatePersonInfoResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message UpdatePersonEmbeddingsRequest {
+  string companyId = 1;
+  string personId = 2;
+  repeated bytes images = 3;
+}
+
+message UpdatePersonEmbeddingsResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+// message GetPersonRequest {
+//   string companyId = 1;
+//   string personId = 2;
+// }
+
+// message GetPersonResponse {
+//   Person person = 1;
+//   string creationTime = 2;
+//   repeated string imageUrls = 3;
+// }
+
+message GetPersonRequest {
+  string companyId = 1;
+  string personId = 2;
+  string requestId = 3;
+}
+
+message GetPersonResponse {
+  int32 errorCode = 1;
+  string errorMessage = 2;
+  Person person = 3;
+  DebugInfo debugInfo = 4;
+  repeated ImageObject images = 5;
+}
+
+message DeletePersonRequest {
+  string companyId = 1;
+  string personId = 2;
+  string requestId = 3;
+}
+
+message DeletePersonResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message RecognitionResult {
+  string personId = 1;
+  string personName = 2;
+  string recognizedTime = 3;
+  string imageUrl = 4;
+  string clientId = 5;
+}
+
+message GetRecognitionHistoryRequest {
+  string companyId = 1;
+  string startTime = 2;
+  string endTime = 3;
+  bool getFresher = 4;
+  string personId = 5;
+}
+
+message GetRecognitionHistoryResponse {
+  repeated RecognitionResult results = 1;
+}
